@@ -1,9 +1,9 @@
 
 package com.planeador.planificador.controller;
 
+import com.planeador.planificador.exception.ResourceNotFoundException;
 import com.planeador.planificador.model.Task;
 import com.planeador.planificador.service.TaskService;
-
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -23,25 +23,32 @@ public class TaskController {
     this.taskService = taskService;
   }
 
-  // Consultar todas las tareas
+  // Consultar todas las tareas activas
   @GetMapping
   public ResponseEntity<List<Task>> findAll() {
-    return ResponseEntity.ok(taskService.findAll());
+    return ResponseEntity.ok(taskService.findActiveTasks());
+  }
+
+  // Consultar tareas archivadas
+  @GetMapping("/archived")
+  public ResponseEntity<List<Task>> findArchivedTasks() {
+    return ResponseEntity.ok(taskService.findArchivedTasks());
   }
 
   // Consultar una tarea por ID
   @GetMapping("/{id}")
   public ResponseEntity<Task> findById(@PathVariable Long id) {
+    Task task = taskService.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "No se encontró la tarea con ID: " + id
+        ));
 
-    return taskService.findById(id)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+    return ResponseEntity.ok(task);
   }
 
   // Registrar una tarea
   @PostMapping
   public ResponseEntity<Task> save(@Valid @RequestBody Task task) {
-
     Task savedTask = taskService.save(task);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(savedTask);
@@ -53,25 +60,24 @@ public class TaskController {
       @PathVariable Long id,
       @Valid @RequestBody Task task) {
 
-    if (taskService.findById(id).isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-
     Task updatedTask = taskService.update(id, task);
 
     return ResponseEntity.ok(updatedTask);
   }
 
-  // Eliminar una tarea
-  @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+  // Archivar una tarea
+  @PatchMapping("/{id}/archive")
+  public ResponseEntity<Task> archive(@PathVariable Long id) {
+    Task archivedTask = taskService.archive(id);
 
-    if (taskService.findById(id).isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
+    return ResponseEntity.ok(archivedTask);
+  }
 
-    taskService.deleteById(id);
+  // Restaurar una tarea archivada
+  @PatchMapping("/{id}/restore")
+  public ResponseEntity<Task> restore(@PathVariable Long id) {
+    Task restoredTask = taskService.restore(id);
 
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok(restoredTask);
   }
 }

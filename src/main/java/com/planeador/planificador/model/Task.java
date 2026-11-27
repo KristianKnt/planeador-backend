@@ -21,11 +21,15 @@ public class Task {
 
   private String assignedTo;
 
+  @NotNull(message = "La fecha límite es obligatoria")
   private LocalDate dueDate;
 
   @Enumerated(EnumType.STRING)
   @NotNull(message = "El estado de la tarea es obligatorio")
   private TaskStatus status;
+
+  @Column(nullable = false)
+  private boolean archived = false;
 
   public Task() {
   }
@@ -78,5 +82,13 @@ public class Task {
 
   public void setStatus(TaskStatus status) {
     this.status = status;
+  }
+
+  public boolean isArchived() {
+    return archived;
+  }
+
+  public void setArchived(boolean archived) {
+    this.archived = archived;
   }
 }

@@ -58,4 +58,38 @@ public class TaskServiceImpl implements TaskService {
   public void deleteById(Long id) {
     taskRepository.deleteById(id);
   }
+
+  @Override
+  public List<Task> findActiveTasks() {
+    return taskRepository.findByArchivedFalse();
+  }
+
+  @Override
+  public List<Task> findArchivedTasks() {
+    return taskRepository.findByArchivedTrue();
+  }
+
+  @Override
+  public Task archive(Long id) {
+    Task task = taskRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "No se encontró la tarea con ID: " + id
+        ));
+
+    task.setArchived(true);
+
+    return taskRepository.save(task);
+  }
+
+  @Override
+  public Task restore(Long id) {
+    Task task = taskRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "No se encontró la tarea con ID: " + id
+        ));
+
+    task.setArchived(false);
+
+    return taskRepository.save(task);
+  }
 }
